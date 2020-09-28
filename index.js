@@ -66,6 +66,7 @@ app.delete("/api/persons/:id", (request, response) => {
     if (_.isEqual(persons, newPersons)) {
         response.send("id is not correct");
     } else {
+        persons = newPersons;
         response.status(204).send("data was deleted").end();
     }
 });
