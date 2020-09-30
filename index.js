@@ -12,6 +12,17 @@ app.use(express.json());
 app.use(cors())
 app.use(express.static('build'))
 
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+      return response.status(400).json({ error: error.message })
+    }
+  
+    next(error)
+  }
 
 morgan.token('data', req=>{
     if(req.body){
@@ -69,7 +80,7 @@ app.put("/api/persons/:id", (request, response, next) => {
     .catch(e=>next(e))
 })
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
     let newPerson = request.body;
 
     Person.find({}).then(data=>{
@@ -81,14 +92,16 @@ app.post("/api/persons", (request, response) => {
             let personToSave = new Person(newPerson)
             personToSave.save().then(data=>{
                 response.status(201).json(data);
-            })
+            }).catch(e=>next(e))
             
         }
     })
+    .catch(e=>next(e))
 
 
 });
 
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
